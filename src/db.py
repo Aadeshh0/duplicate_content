@@ -6,11 +6,11 @@ def init_db(path = "data/duplicate_questions.db"):
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS duplicate_questions (
-        duplicate_question_id TEXT PRIMARY KEY,
-        reference_question_id TEXT,
-        question_text TEXT,
-        final_answer TEXT,
-        difficulty TEXT
+        duplicate_question_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        reference_question_id INTEGER NOT NULL,
+        question_text TEXT NOT NULL,
+        difficulty INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
@@ -22,13 +22,16 @@ def insert_records(conn, records):
     cur = conn.cursor()
 
     cur.executemany("""
-    INSERT INTO duplicate_questions VALUES (?, ?, ?, ?, ?)
+    INSERT INTO duplicate_questions (
+        reference_question_id,
+        question_text,
+        difficulty
+    )
+    VALUES (?, ?, ?)
     """, [
         (
-            r["duplicate_question_id"],
             r["reference_question_id"],
             r["question_text"],
-            r["final_answer"],
             r["difficulty"]
         )
         for r in records

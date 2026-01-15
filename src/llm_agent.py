@@ -77,3 +77,27 @@ def call_llm_agent(payload : list[dict]):
     print('*' * 80)
 
     return llm_output
+
+
+def normalize_llm_response(llm_respone : dict) -> list[dict]:
+    
+    flattened_records = []
+    results = llm_respone.get("results", [])
+
+    print('\n ------------ NORMALIZING LLM RESPONSE ------------')
+    print(f"Total reference questions: {len(results)}")
+
+    for result in results:
+        ref_id = result.get("reference_question_id")
+        duplicates = result.get("duplicates")
+
+        for index, duplicate in enumerate(duplicates):
+            record = {
+                "reference_question_id": int(ref_id),
+                "question_text": duplicate.get("question_text"),
+                "difficulty": int(duplicate.get("difficulty"))
+            }
+
+            flattened_records.append(record)
+
+    return flattened_records
