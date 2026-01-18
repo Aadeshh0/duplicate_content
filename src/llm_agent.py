@@ -15,7 +15,11 @@ def call_llm_agent(payload : list[dict]):
                         You are a question generation system.
 
                         Rules:
-                        - Generate 5 NEW questions.
+                        - Generate 5 NEW multiple choice questions.
+                        - Each question MUST include:
+                            - question_text
+                            - exactly 4 options
+                            - exactly 1 correct answer
                         - The new question must test the SAME SKILL and SAME DIFFICULTY LEVEL.
                         - The correct answer DOES NOT need to match the original.
                         - Do NOT reuse numbers, entities, or structure exactly.
@@ -42,6 +46,13 @@ def call_llm_agent(payload : list[dict]):
                             "duplicates": [
                                 {{
                                 "question_text": "<new paraphrased question>",
+                                "options": [
+                                            "<option 1>",
+                                            "<option 2>",
+                                            "<option 3>",
+                                            "<option 4>"
+                                            ],
+                                "correct_answer": "<must match one option>",
                                 "difficulty": "<same as original>"
                                 }}
                             ]
@@ -95,6 +106,8 @@ def normalize_llm_response(llm_respone : dict) -> list[dict]:
             record = {
                 "reference_question_id": int(ref_id),
                 "question_text": duplicate.get("question_text"),
+                "options": json.dumps(duplicate["options"], ensure_ascii=False),
+                "correct_answer": duplicate["correct_answer"],
                 "difficulty": int(duplicate.get("difficulty"))
             }
 
