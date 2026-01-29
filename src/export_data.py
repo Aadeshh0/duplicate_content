@@ -2,8 +2,8 @@ import os
 import sqlite3
 import pandas as pd
 
-db_path = 'data/duplicate_questions.db'
-output_file = 'data/duplicate_questions.xlsx'
+db_path = 'data/solution/duplicate_questions.db'
+output_file = 'data/solution/duplicate_questions.xlsx'
 
 def load_data():
     conn = sqlite3.connect(db_path)

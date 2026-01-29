@@ -11,7 +11,7 @@ client = OpenAI(
     base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
 )
 
-def call_llm_agent(payload : list[dict]):
+def call_llm_agent(payload : list[dict]) -> str:
     system_prompt = """
                         You are a question generation system.
 
@@ -24,7 +24,7 @@ def call_llm_agent(payload : list[dict]):
                             - exactly 1 detailed step by step solution explanation for correct answer
                         - Solution rules:
                             - 2-3 concise lines only
-                            - Each line = one logical step
+                            - Each line should be a logical step
                             - Explain only the correct answer
                             - No intro, no summary, no discussion of other options
                         - New question's text should match the input question formatting for HTML.
@@ -94,6 +94,9 @@ def call_llm_agent(payload : list[dict]):
     print(f'\n [LoggingTime] LLM call took {elapsedTime:.2f} ms')
 
     llm_output = response.choices[0].message.content
+
+    if not llm_output:
+        return("LLM returned empty response.")
 
     print('*' * 80)
     print("\n========== LLM RESPONSE RECEIVED ==========")
@@ -174,7 +177,7 @@ def call_image_llm_agent(payload : list[dict]):
 def normalize_llm_response(llm_respone : dict) -> list[dict]:
     
     flattened_records = []
-    results = llm_respone.get("results", [])
+    results = llm_respone.get("results")
 
     print('\n ------------ NORMALIZING LLM RESPONSE ------------')
     print(f"Total reference questions: {len(results)}")

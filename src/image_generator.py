@@ -58,7 +58,7 @@ def call_image_llm_agent(payload: list[dict]):
             prompt=system_prompt + "\n" + user_prompt,
             n=5,
             size="1024x1024"
-        )
+        ) 
 
         image_paths = []
 

@@ -23,7 +23,7 @@ raw_response = call_llm_agent(payload)
 endTime = time.time()
 print(f'\n Collecting response from LLM')
 
-timeTaken = startTime - endTime
+timeTaken = endTime - startTime
 print(f'\n || Total time taken for the llm call : {timeTaken} || ')
 
 llm_response = json.loads(raw_response)
