@@ -1,5 +1,5 @@
 from data import load_filtered_data, group_questions, build_llm_payload
-from llm_agent import call_llm_agent, normalize_llm_response
+from llm_agent import call_llm_agent, normalize_llm_response, call_llm_agent_with_reason
 from db import init_db, insert_records
 
 from data import load_image_questions, group_image_questions, build_image_payload
@@ -38,9 +38,10 @@ insert_records(conn, records)
 conn.close()
 
 print("=" * 60)
-print("=" * 60)
-print("Image Pipeline")
+# print("=" * 60)
+# print("Image Pipeline")
 print("-" * 30)
+
 
 # df = load_image_questions()
 

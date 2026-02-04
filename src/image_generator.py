@@ -62,6 +62,8 @@ def call_image_llm_agent(payload: list[dict]):
 
         image_paths = []
 
+        # response = response, [None]
+
         for i, img in enumerate(response.data):
             image_base64 = img.b64_json
             image_bytes = base64.b64decode(image_base64)

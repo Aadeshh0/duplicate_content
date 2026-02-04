@@ -27,6 +27,22 @@ def init_db(path = "data/solution/duplicate_questions.db"):
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS duplicate_option_explanations (
+    duplicate_option_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reference_question_id INTEGER NOT NULL,
+    duplicate_question_id TEXT NOT NULL,
+    duplicate_question_text TEXT NOT NULL,
+    option_index INTEGER NOT NULL,
+    option_text TEXT NOT NULL,
+    is_correct INTEGER NOT NULL,
+    explanation_text TEXT NOT NULL,
+    difficulty INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     conn.commit()
     return conn
 
@@ -55,6 +71,10 @@ def insert_records(conn, records):
         )
         for r in records
     ])
+
+    cur.executemany("""
+    INSERT INTO 
+    """)
 
     conn.commit()
 

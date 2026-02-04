@@ -12,3 +12,6 @@ wheels/
 .env
 
 uv.lock
+
+image_load_aws.py
+try_image_generation.py

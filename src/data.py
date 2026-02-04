@@ -1,4 +1,5 @@
 import pandas as pd
+import requests
 
 def load_filtered_data():
 
@@ -79,6 +80,11 @@ def build_llm_payload(grouped_df: pd.DataFrame) -> list[dict]:
             }
         })
 
+    print('=' * 40)
+    print(type(payload))
+    print(f'\nPayload = {payload[0]}')
+    print('=' * 40)
+    
     return payload
 
 def build_image_payload(grouped_image_df: pd.DataFrame) -> list[dict]:
@@ -119,4 +125,35 @@ def load_image_urls():
 
     filter_df["image_url"] = filter_df["image_url"].where(filter_df["image_url"].notna(), None)
 
+    # filter_df = list(filter_df)
+
     return filter_df
+
+def fetch_image_bytes(df):
+    fetched_images = []
+
+    for i, row in df.iterrows():
+        question_id = int(row["question_id"])
+        image_url = row["image_url"]
+
+        if not image_url:
+            print(f'\n[ERROR 404! : Image URL not found for {question_id}]')
+            continue
+
+        try:
+            response = requests.get(image_url, timeout=10)
+            response.raise_for_status()
+
+            fetched_images.append({
+                "question_id" : question_id,
+                "image_url" : image_url,
+                "image_bytes" : response.content
+            })
+
+            print(f'[Log SUCCESS] Fetched image for question id : {question_id} | size = {len(response.content)} bytes')
+        
+        except Exception as e:
+            print(f'[LOG FAIL] Failed for question : {question_id} | {e} ')
+
+    print(f'Total images fetched = {len(fetched_images)}')
+    return fetched_images
