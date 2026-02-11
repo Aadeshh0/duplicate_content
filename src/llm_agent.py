@@ -1,4 +1,5 @@
 import json
+import uuid
 import os
 import time
 from dotenv import load_dotenv
@@ -222,7 +223,7 @@ def normalize_image_llm_response(llm_response : dict) -> list[dict]:
     return records
 
 
-def call_llm_agent_with_reason(payload : dict) -> str|None:
+def call_llm_agent_with_reason(payload : dict, idx) -> str | None:
     system_prompt = """
                         You are a question generation system.
 
@@ -262,19 +263,18 @@ def call_llm_agent_with_reason(payload : dict) -> str|None:
 
                     Output JSON schema:
                     {{
-                    "duplicate_questions": [
-                        {
-                        "duplicate_question_text": "new question string",
-                        "options": [
-                            {
-                            "option_text": "12",
-                            "is_correct": true,
-                            "explanation_text": "You added 9 and 3 correctly to get 12."
-                            },
-                            ...
+                        "duplicate_questions": [
+                            {{
+                            "duplicate_question_text": "new question string",
+                            "options": [
+                                {{
+                                "option_text": "<option 1>",
+                                "is_correct": true,
+                                "explanation_text": "<brief explanation of how user came to this answer.>"
+                                }}
+                            ]
+                            }}
                         ]
-                        }
-                    ]
                     }}
 
                     Hard constraints:
@@ -284,7 +284,8 @@ def call_llm_agent_with_reason(payload : dict) -> str|None:
                 """
     
     print("=" * 60)
-    print(f"Total questions in payload: {len(payload)}\n")
+    print(f"Total questions in payload for this LLM call #{idx+1}: {len(payload)}\n")
+    print("Only has one question in the payload.")
 
     print(f"\n#1 Sending Question")
     print(f"    Difficulty   : {payload['question']['difficulty']}")
@@ -302,7 +303,9 @@ def call_llm_agent_with_reason(payload : dict) -> str|None:
     )
 
     elapsedTime = (time.perf_counter() - startTime) * 1000
-    print(f'\n [LoggingTime] LLM call took {elapsedTime:.2f} ms')
+    print(f'\n[LoggingTime] LLM call took {elapsedTime:.2f} ms')
+    print(f"Type of response received from LLM : {type(response)}")
+    print("*" * 25)
 
     llm_output = response.choices[0].message.content
 
@@ -312,48 +315,59 @@ def call_llm_agent_with_reason(payload : dict) -> str|None:
 
     print('*' * 80)
     print("\n========== LLM RESPONSE RECEIVED ==========")
+    print(f"\n LLM Output type : {type(llm_output)}")
     print(llm_output)
     print('*' * 80)
 
     return llm_output
 
-def normalize_llm_response_reason(llm_respone : str, ref_question_id : int, difficulty : int) -> list[dict]:
+def normalize_llm_response_with_reason(
+                                    llm_response : str | None, 
+                                    ref_question_id : int, 
+                                    difficulty : int, 
+                                    idx
+                                ) -> list[dict]:
     
+    if llm_response is None:
+        return []
+
+    parsed_response = json.loads(llm_response)
+    print(f"\nType of parsed_response from json.loads(llm_respnse) : {type(parsed_response)}\n")
+    duplicate_questions = parsed_response.get("duplicate_questions", [])
+
     flattened_records = []
-    results = llm_respone
 
-    print('\n ------------ NORMALIZING LLM RESPONSE ------------')
-    print(f"Total reference questions: {len(results)}")
+    print(f'\n ------------ {idx+1} NORMALIZING LLM RESPONSE ------------')
+    print(f"Total dupliacte questions: {len(duplicate_questions)}")
 
-    for duplicate_index, row in enumerate(results):
-        question_text = row["duplicate_question_text"]
-        options = row["options"]
+    for duplicate_index, row in enumerate(duplicate_questions):
+        raw_question_text = row.get("duplicate_question_text")
 
-        for option_index, option in enumerate(options):
+        if isinstance(raw_question_text, dict):
+            duplicate_question_text = raw_question_text.get("primary_text", "")
+        elif isinstance(raw_question_text, str):
+            duplicate_question_text = raw_question_text
+        else:
+            duplicate_question_text = str(raw_question_text)
+
+        duplicate_question_id = f"{ref_question_id}_{duplicate_index}"  # note rethink for parellelization
+
+        for option_index, option in enumerate(row["options"]):
+            is_correct_raw = option.get("is_correct", False)
+            is_correct = 1 if str(is_correct_raw).lower() == "true" else 0
+
             flattened_records.append({
-                "reference_question_id" : ref_question_id,
-                "duplicate_question_id" : f"{duplicate_index}",
+                "reference_question_id": ref_question_id,
+                "duplicate_question_id": duplicate_question_id,
+                "duplicate_question_text": duplicate_question_text,
+                "option_index": option_index,
                 "option_text": option["option_text"],
-                "is_correct": int(option["is_correct"]),
+                "is_correct": is_correct, 
                 "explanation_text": option["explanation_text"],
                 "difficulty": difficulty
             })
 
-    for result in results:
-        ref_id = result.get("reference_question_id")
-        duplicates = result.get("duplicates", [])
-
-        for index, duplicate in enumerate(duplicates):
-            record = {
-                "reference_question_id": int(ref_id),
-                "question_text": duplicate.get("question_text"),
-                "options": json.dumps(duplicate["options"], ensure_ascii=False),
-                "correct_answer": duplicate["correct_answer"],
-                "solution" : duplicate['solution'],
-                "difficulty": int(duplicate.get("difficulty"))
-            }
-
-            flattened_records.append(record)
+    
 
     return flattened_records
 

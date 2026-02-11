@@ -51,30 +51,61 @@ def insert_records(conn, records):
     cur = conn.cursor()
 
     cur.executemany("""
-    INSERT INTO duplicate_questions (
-        reference_question_id,
-        question_text,
-        options,
-        correct_answer,
-        solution,
-        difficulty
-    )
-    VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO duplicate_option_explanations (
+            reference_question_id,
+            duplicate_question_id,
+            duplicate_question_text,
+            option_index,
+            option_text,
+            is_correct,
+            explanation_text,
+            difficulty
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, [
         (
             r["reference_question_id"],
-            r["question_text"],
-            r["options"],
-            r["correct_answer"],
-            r["solution"],
+            r["duplicate_question_id"],
+            r["duplicate_question_text"],
+            r["option_index"],
+            r["option_text"],
+            r["is_correct"],        
+            r["explanation_text"],
             r["difficulty"]
         )
         for r in records
     ])
 
+    conn.commit()
+
+def insert_option_explanation(conn, records):
+    cur = conn.cursor()
+
     cur.executemany("""
-    INSERT INTO 
-    """)
+    INSERT INTO duplicate_option_explanations (
+        reference_question_id,
+        duplicate_question_id,
+        duplicate_question_text,
+        option_index,
+        option_text,
+        is_correct,
+        explanation_text,
+        difficulty
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, [
+        (
+            r["reference_question_id"],
+            r["duplicate_question_id"],
+            r["duplicate_question_text"],
+            r["option_index"],
+            r["option_text"],
+            r["is_correct"],  # normalize here
+            r["explanation_text"],
+            r["difficulty"]
+        )
+        for r in records
+    ])
 
     conn.commit()
 
@@ -100,3 +131,5 @@ def insert_image_records(conn, records):
     ])
 
     conn.commit()
+
+
