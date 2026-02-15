@@ -157,3 +157,6 @@ def fetch_image_bytes(df):
 
     print(f'Total images fetched = {len(fetched_images)}')
     return fetched_images
+
+
+
